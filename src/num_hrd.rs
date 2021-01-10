@@ -64,6 +64,26 @@ impl NumHrd {
     pub fn get_by_index(&self, n: &usize) -> &Num {
         &self.nums[*n]
     }
+
+    pub fn is_win(&self) -> bool {
+        let mut res = false;
+        let len = self.len();
+        for i in 1..len {
+            res = self.get_by_index(&(i - 1)).n as usize == i;
+            if !res {
+                break
+            }
+        }
+        res
+    }
+
+    pub fn shuffle(&mut self) {
+
+    }
+
+    pub fn len(&self) -> usize {
+        self.size as usize * self.size as usize
+    }
 }
 
 /// 表示一个数字块
@@ -157,6 +177,45 @@ mod tests {
             assert_eq!(exchange_res, Err(ErrorKind::CannotExchangeNoneZero));
             let exchange_res = num_hrd.exchange(&0, &4);
             assert_eq!(exchange_res, Err(ErrorKind::CannotExchangeNotNeighbouring));
+        }
+
+        #[test]
+        fn is_win_works() {
+            let mut num_hrd = NumHrd::new(&3);
+            assert_eq!(num_hrd.is_win(), false);
+            num_hrd.nums[0] = Num {
+                pos: (0, 0),
+                n: 1,
+            };
+            num_hrd.nums[1] = Num {
+                pos: (0, 1),
+                n: 2,
+            };
+            num_hrd.nums[2] = Num {
+                pos: (0, 2),
+                n: 3,
+            };
+            num_hrd.nums[3] = Num {
+                pos: (1, 0),
+                n: 4,
+            };
+            num_hrd.nums[4] = Num {
+                pos: (1, 1),
+                n: 5,
+            };
+            num_hrd.nums[5] = Num {
+                pos: (1, 2),
+                n: 6,
+            };
+            num_hrd.nums[6] = Num {
+                pos: (2, 0),
+                n: 7,
+            };
+            num_hrd.nums[7] = Num {
+                pos: (2, 1),
+                n: 8,
+            };
+            assert_eq!(num_hrd.is_win(), true);
         }
     }
 }
