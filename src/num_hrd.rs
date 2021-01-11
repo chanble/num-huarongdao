@@ -1,7 +1,29 @@
 use std::vec::Vec;
 use std::cmp::PartialEq;
 use std::default::Default;
+use rand::{self, Rng};
+
 use crate::error::ErrorKind;
+
+enum Direction {
+    Top,
+    Bottom,
+    Left,
+    Right,
+}
+
+impl Direction {
+    fn rand() -> Self {
+        let mut rng = rand::thread_rng();
+        let n: u32 = rng.gen_range(0..4);
+        match n {
+            0 => Self::Top,
+            1 => Self::Bottom,
+            2 => Self::Left,
+            _ => Self::Right,
+        }
+    }
+}
 
 #[derive(Debug)]
 struct NumHrd {
@@ -51,14 +73,15 @@ impl NumHrd {
             i += 1;
         }
         temp = self.nums[one_i];
-        self.nums[one_i] = self.nums[other_i];
-        self.nums[other_i] = temp;
+        self.nums[one_i].n = self.nums[other_i].n;
+        self.nums[other_i].n = temp.n;
         Ok(())
     }
 
     pub fn is_neighbouring(&self,  one: &Num, other: &Num) -> bool {
+        println!("is_neighbouring: {:?}, {:?}", one, other);
         (one.pos.0 == other.pos.0 && (one.pos.1 as i32 - other.pos.1 as i32).abs() == 1)
-            || (one.pos.1 == other.pos.1 && (one.pos.1 as i32 - other.pos.1 as i32).abs() == 1) 
+            || (one.pos.1 == other.pos.1 && (one.pos.0 as i32 - other.pos.0 as i32).abs() == 1) 
     }
 
     pub fn get_by_index(&self, n: &usize) -> &Num {
@@ -79,12 +102,66 @@ impl NumHrd {
 
     pub fn shuffle(&mut self) {
         for i in 0..50 {
-            
+            let direc: Direction = Direction::rand();
+            self.zero_move(&direc);
         }
     }
 
     pub fn len(&self) -> usize {
         self.size as usize * self.size as usize
+    }
+
+    pub fn zero_move(&mut self, d: &Direction) -> Result<bool, ErrorKind> {
+        let zero_index_opt = self.nums.iter().position(|x| x.n == 0);
+        match zero_index_opt {
+            Some(zero_index) => {
+                if let Some(other_index) = self.get_dirction_index(&zero_index, d) {
+                    println!("zero move zero_index: {}, other_index: {}", zero_index, other_index);
+                    self.exchange(&zero_index, &other_index)?;
+                }
+                Ok(true)
+            },
+            None => {
+                Err(ErrorKind::ZeroNotFound)
+            }
+        }
+    }
+
+    ///得到指定index位置指定方向的index
+    /// index 表示指定的索引
+    /// d 表示指定的方向
+    fn get_dirction_index(&self, index: &usize, d: &Direction) -> Option<usize> {
+        let tmp_size = self.size as usize;
+        match d {
+            Direction::Left => {
+                if index % tmp_size == 0 {
+                    return None;
+                } else {
+                    return Some(index - 1);
+                }
+            },
+            Direction::Right => {
+                if index % tmp_size + 1 == tmp_size {
+                    return None;
+                } else {
+                    return Some(index + 1);
+                }
+            },
+            Direction::Top => {
+                if index / tmp_size == 0 {
+                    return None;
+                } else {
+                    return Some(index - tmp_size);
+                }
+            },
+            Direction::Bottom => {
+                if index / tmp_size == tmp_size - 1 {
+                    return None;
+                } else {
+                    return Some(index + tmp_size);
+                }
+            }
+        }
     }
 }
 
@@ -218,6 +295,38 @@ mod tests {
                 n: 8,
             };
             assert_eq!(num_hrd.is_win(), true);
+        }
+
+        #[test]
+        fn get_dirction_index_works() {
+            let numhrd = NumHrd::new(&3);
+            assert_eq!(numhrd.get_dirction_index(&0, &Direction::Top), None);
+            assert_eq!(numhrd.get_dirction_index(&0, &Direction::Left), None);
+            assert_eq!(numhrd.get_dirction_index(&0, &Direction::Right), Some(1));
+            assert_eq!(numhrd.get_dirction_index(&0, &Direction::Bottom), Some(3));
+            assert_eq!(numhrd.get_dirction_index(&4, &Direction::Top), Some(1));
+            assert_eq!(numhrd.get_dirction_index(&4, &Direction::Left), Some(3));
+            assert_eq!(numhrd.get_dirction_index(&4, &Direction::Right), Some(5));
+            assert_eq!(numhrd.get_dirction_index(&4, &Direction::Bottom), Some(7));
+            assert_eq!(numhrd.get_dirction_index(&8, &Direction::Top), Some(5));
+            assert_eq!(numhrd.get_dirction_index(&8, &Direction::Left), Some(7));
+            assert_eq!(numhrd.get_dirction_index(&8, &Direction::Right), None);
+            assert_eq!(numhrd.get_dirction_index(&8, &Direction::Bottom), None);
+        }
+
+        #[test]
+        fn zero_move_works() {
+            let mut numhrd = NumHrd::new(&3);
+            numhrd.zero_move(&Direction::Right).unwrap();
+            assert_eq!(numhrd.get_by_index(&0), &Num {
+                n: 1,
+                pos: (0u8, 0u8),
+            });
+            numhrd.zero_move(&Direction::Bottom).unwrap();
+            assert_eq!(numhrd.get_by_index(&1), &Num {
+                n: 4,
+                pos: (0u8, 1u8),
+            });
         }
     }
 }
