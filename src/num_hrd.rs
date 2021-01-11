@@ -78,7 +78,9 @@ impl NumHrd {
     }
 
     pub fn shuffle(&mut self) {
-
+        for i in 0..50 {
+            
+        }
     }
 
     pub fn len(&self) -> usize {
