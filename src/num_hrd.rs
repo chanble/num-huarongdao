@@ -100,11 +100,12 @@ impl NumHrd {
         res
     }
 
-    pub fn shuffle(&mut self) {
-        for i in 0..50 {
+    pub fn shuffle(&mut self) -> Result<(), ErrorKind>{
+        for _ in 0..50 {
             let direc: Direction = Direction::rand();
-            self.zero_move(&direc);
+            self.zero_move(&direc)?;
         }
+        Ok(())
     }
 
     pub fn len(&self) -> usize {
@@ -243,7 +244,7 @@ mod tests {
         #[test]
         fn exchange_works() {
             let mut num_hrd = NumHrd::new(&3);
-            let exchange_res = num_hrd.exchange(&0, &1);
+            let _ = num_hrd.exchange(&0, &1);
             println!("{:?}", num_hrd);
             assert_eq!(num_hrd.get_by_index(&1).n, 0);
 
