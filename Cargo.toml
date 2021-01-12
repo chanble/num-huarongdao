@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["chen <chanble_cn@163.com>"]
 edition = "2018"
 description = "fifteen puzzle lib"
-publish = ["https://crates.io/git/crates.io-index.git"]
+publish = ["default"]
 repository = "https://github.com/chanble/num-huarongdao"
 homepage = "https://github.com/chanble/num-huarongdao"
 readme = "readme.md"
@@ -14,3 +14,6 @@ license="MIT"
 
 [dependencies]
 rand = "0.8.1"
+
+[registries]
+default = { index = "https://crates.io/git/crates.io-index.git" }
