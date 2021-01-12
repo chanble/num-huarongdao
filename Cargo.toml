@@ -3,6 +3,11 @@ name = "num-huarongdao"
 version = "0.1.0"
 authors = ["chen <chanble_cn@163.com>"]
 edition = "2018"
+description = "fifteen puzzle lib"
+publish = ["https://crates.io/git/crates.io-index.git"]
+repository = "https://github.com/chanble/num-huarongdao"
+homepage = "https://github.com/chanble/num-huarongdao"
+license="MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
