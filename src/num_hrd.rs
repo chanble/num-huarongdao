@@ -5,7 +5,7 @@ use rand::{self, Rng};
 
 use crate::error::ErrorKind;
 
-enum Direction {
+pub enum Direction {
     Top,
     Bottom,
     Left,
@@ -24,9 +24,23 @@ impl Direction {
         }
     }
 }
-
+///
+/// fifteen puzzle game lib
+/// 数字华容道
+/// Usage : 
+/// ```rust
+/// use num_huarongdao::num_hrd::NumHrd;
+/// // 生成一个3 x 3的游戏
+/// let mut num_hrd = NumHrd::new(&3);
+/// // 打乱游戏
+/// num_hrd.shuffle();
+/// 
+/// num_hrd.move_num(1usize);
+/// ```
+/// 
+///   
 #[derive(Debug)]
-struct NumHrd {
+pub struct NumHrd {
     /// 华容道的边长
     size: u8,
     /// 0.0 -> 0.1 -> 0.2 -> 1.0 -> 1.1 -> 1.2 -> 2.0 -> ...
@@ -35,6 +49,10 @@ struct NumHrd {
 }
 
 impl NumHrd {
+
+    /// create a num huarongdao
+    /// s: side num
+    /// 
     pub fn new(s: &u8) -> Self {
         let mut nums:Vec<Num> = Vec::new();
         let nums_len = s * s;
@@ -48,6 +66,9 @@ impl NumHrd {
         }
     }
 
+    ///
+    /// 交换两个块的位置
+    /// 
     pub fn exchange(&mut self, one_index: &usize, other_index: &usize) -> Result<(), ErrorKind> {
 
         let one = self.get_by_index(one_index);
@@ -78,6 +99,7 @@ impl NumHrd {
         Ok(())
     }
 
+    /// 两个块是否相邻
     pub fn is_neighbouring(&self,  one: &Num, other: &Num) -> bool {
         println!("is_neighbouring: {:?}, {:?}", one, other);
         (one.pos.0 == other.pos.0 && (one.pos.1 as i32 - other.pos.1 as i32).abs() == 1)
@@ -88,6 +110,14 @@ impl NumHrd {
         &self.nums[*n]
     }
 
+    /// 
+    /// 得到某个数字的索引
+    /// 
+    pub fn get_index(&self, n: &u8) -> Option<usize> {
+        self.nums.iter().position(|x| x.n == *n)
+    }
+    /// 判断是否成功
+    /// 
     pub fn is_win(&self) -> bool {
         let mut res = false;
         let len = self.len();
@@ -100,6 +130,9 @@ impl NumHrd {
         res
     }
 
+    ///
+    /// 打乱游戏
+    /// 
     pub fn shuffle(&mut self) -> Result<(), ErrorKind>{
         for _ in 0..50 {
             let direc: Direction = Direction::rand();
@@ -112,12 +145,14 @@ impl NumHrd {
         self.size as usize * self.size as usize
     }
 
+    ///
+    /// 移动空格所在的位置
+    /// d: direction 空格想移动的方向
     pub fn zero_move(&mut self, d: &Direction) -> Result<bool, ErrorKind> {
-        let zero_index_opt = self.nums.iter().position(|x| x.n == 0);
+        let zero_index_opt = self.get_index(&0);
         match zero_index_opt {
             Some(zero_index) => {
                 if let Some(other_index) = self.get_dirction_index(&zero_index, d) {
-                    println!("zero move zero_index: {}, other_index: {}", zero_index, other_index);
                     self.exchange(&zero_index, &other_index)?;
                 }
                 Ok(true)
@@ -164,13 +199,26 @@ impl NumHrd {
             }
         }
     }
+
+    ///
+    /// 移动指定所以的块
+    /// 
+    pub fn move_num(&mut self, index: usize) -> bool {
+        if let Some(zero_index) = self.get_index(&0) {
+            return match self.exchange(&index, &zero_index) {
+                Ok(_) => true,
+                Err(_) => false,
+            }
+        }
+        false
+    }
 }
 
 /// 表示一个数字块
 /// pos: 坐标位置， 表示第m行，第n列  从0开始计数
 /// n: 表示具体数字
 #[derive(Debug, Default, PartialEq, Copy, Clone)]
-struct Num {
+pub struct Num {
     pos: (u8, u8),
     n: u8,
 }
