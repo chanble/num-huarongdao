@@ -1,7 +1,7 @@
 use std::vec::Vec;
 use std::cmp::PartialEq;
 use std::default::Default;
-use rand::{self, Rng};
+use std::time::{SystemTime};
 
 use crate::error::ErrorKind;
 
@@ -14,8 +14,7 @@ pub enum Direction {
 
 impl Direction {
     fn rand() -> Self {
-        let mut rng = rand::thread_rng();
-        let n: u32 = rng.gen_range(0..4);
+        let n: i64 = Self::rand_range(&0i64, &4i64);
         match n {
             0 => Self::Top,
             1 => Self::Bottom,
@@ -23,10 +22,22 @@ impl Direction {
             _ => Self::Right,
         }
     }
+
+    ///
+    /// 
+    fn rand_range(min: &i64, max: &i64) -> i64 {
+        let start = SystemTime::now();
+        let since_the_epoch = start
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .expect("Time went backwards");
+        let in_ms = (since_the_epoch.as_millis() % i64::MAX as u128) as i64;
+        return min + in_ms % (max - min);
+    }
 }
 ///
 /// fifteen puzzle game lib
 /// 数字华容道
+/// 
 /// Usage : 
 /// ```rust
 /// use num_huarongdao::num_hrd::NumHrd;
@@ -79,7 +90,6 @@ impl NumHrd {
         if !one.is_empty() && !other.is_empty() {
             return Err(ErrorKind::CannotExchangeNoneZero);
         }
-        let mut temp: Num = Num::default();
         let mut i = 0;
         let mut one_i = 0usize;
         let mut other_i = 0usize;
@@ -93,7 +103,7 @@ impl NumHrd {
             }
             i += 1;
         }
-        temp = self.nums[one_i];
+        let temp = self.nums[one_i];
         self.nums[one_i].n = self.nums[other_i].n;
         self.nums[other_i].n = temp.n;
         Ok(())
@@ -376,6 +386,24 @@ mod tests {
                 n: 4,
                 pos: (0u8, 1u8),
             });
+        }
+    }
+
+    mod direction_tests {
+        use super::super::*;
+
+        #[test]
+        fn rand_works() {
+            let i = Direction::rand_range(&0i64, &4i64);
+
+            assert!(i < 4);
+            assert!(i >= 0);
+            let i = Direction::rand_range(&-15i64, &-14i64);
+
+            assert!(i == -15);
+            let i = Direction::rand_range(&1i64, &2i64);
+
+            assert!(i == 1);
         }
     }
 }
