@@ -1,7 +1,6 @@
 use std::vec::Vec;
 use std::cmp::PartialEq;
 use std::default::Default;
-use std::time::{SystemTime};
 
 use crate::error::ErrorKind;
 
@@ -14,24 +13,14 @@ pub enum Direction {
 
 impl Direction {
     fn rand() -> Self {
-        let n: i64 = Self::rand_range(&0i64, &4i64);
+        let mut rng = oorandom::Rand32::new(4);
+        let n: u8 = (rng.rand_u32() % 4) as u8;
         match n {
             0 => Self::Top,
             1 => Self::Bottom,
             2 => Self::Left,
             _ => Self::Right,
         }
-    }
-
-    ///
-    /// 
-    fn rand_range(min: &i64, max: &i64) -> i64 {
-        let start = SystemTime::now();
-        let since_the_epoch = start
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .expect("Time went backwards");
-        let in_ms = (since_the_epoch.as_millis() % i64::MAX as u128) as i64;
-        return min + in_ms % (max - min);
     }
 }
 ///
@@ -120,6 +109,9 @@ impl NumHrd {
         &self.nums[*n]
     }
 
+    pub fn get_data(&self) -> &Vec<Num> {
+        &self.nums
+    }
     /// 
     /// 得到某个数字的索引
     /// 
@@ -249,6 +241,10 @@ impl Num {
 
     pub fn is_empty(&self) -> bool {
         self.n == 0
+    }
+
+    pub fn get_n(&self) -> u8 {
+        self.n
     }
 }
 
@@ -386,24 +382,6 @@ mod tests {
                 n: 4,
                 pos: (0u8, 1u8),
             });
-        }
-    }
-
-    mod direction_tests {
-        use super::super::*;
-
-        #[test]
-        fn rand_works() {
-            let i = Direction::rand_range(&0i64, &4i64);
-
-            assert!(i < 4);
-            assert!(i >= 0);
-            let i = Direction::rand_range(&-15i64, &-14i64);
-
-            assert!(i == -15);
-            let i = Direction::rand_range(&1i64, &2i64);
-
-            assert!(i == 1);
         }
     }
 }

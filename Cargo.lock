@@ -2,4 +2,13 @@
 # It is not intended for manual editing.
 [[package]]
 name = "num-huarongdao"
-version = "0.1.1"
+version = "0.1.2"
+dependencies = [
+ "oorandom",
+]
+
+[[package]]
+name = "oorandom"
+version = "11.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ab1bc2a289d34bd04a330323ac98a1b4bc82c9d9fcb1e66b63caa84da26b575"
