@@ -12,8 +12,8 @@ pub enum Direction {
 }
 
 impl Direction {
-    fn rand() -> Self {
-        let mut rng = oorandom::Rand32::new(4);
+    fn rand(seed: u64) -> Self {
+        let mut rng = oorandom::Rand32::new(seed);
         let n: u8 = (rng.rand_u32() % 4) as u8;
         match n {
             0 => Self::Top,
@@ -33,7 +33,7 @@ impl Direction {
 /// // 生成一个3 x 3的游戏
 /// let mut num_hrd = NumHrd::new(&3);
 /// // 打乱游戏
-/// num_hrd.shuffle();
+/// num_hrd.shuffle(1);
 /// 
 /// num_hrd.move_num(1usize);
 /// ```
@@ -135,9 +135,9 @@ impl NumHrd {
     ///
     /// 打乱游戏
     /// 
-    pub fn shuffle(&mut self) -> Result<(), ErrorKind>{
+    pub fn shuffle(&mut self, seed: u64) -> Result<(), ErrorKind>{
         for _ in 0..50 {
-            let direc: Direction = Direction::rand();
+            let direc: Direction = Direction::rand(seed);
             self.zero_move(&direc)?;
         }
         Ok(())
@@ -382,6 +382,14 @@ mod tests {
                 n: 4,
                 pos: (0u8, 1u8),
             });
+        }
+
+        #[test]
+        fn shuffle_works() {
+            let mut numhrd = NumHrd::new(&3);
+            numhrd.shuffle(1).unwrap();
+            println!("{:#?}", numhrd);
+            assert_eq!(1, 1);
         }
     }
 }
