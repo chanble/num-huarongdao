@@ -55,7 +55,7 @@ impl NumHrd {
     /// 
     pub fn new(s: &u8) -> Self {
         let mut nums:Vec<Num> = Vec::new();
-        let nums_len = s * s;
+        let nums_len: usize = (s * s).into();
         for i in 0..nums_len {
             let num = Num::new(&i, s);
             nums.push(num);
@@ -115,7 +115,7 @@ impl NumHrd {
     /// 
     /// 得到某个数字的索引
     /// 
-    pub fn get_index(&self, n: &u8) -> Option<usize> {
+    pub fn get_index(&self, n: &usize) -> Option<usize> {
         self.nums.iter().position(|x| x.n == *n)
     }
     /// 判断是否成功
@@ -222,7 +222,7 @@ impl NumHrd {
 #[derive(Debug, Default, PartialEq, Copy, Clone)]
 pub struct Num {
     pos: (u8, u8),
-    n: u8,
+    n: usize,
 }
 
 impl Num {
@@ -230,9 +230,9 @@ impl Num {
     /// 生成一个新的块
     /// n 表示生成的数字
     /// s 表示整个华容道的大小， 用来确定数字的初始位置
-    pub fn new(n: &u8, s: &u8) -> Self {
-        let x: u8 = n / s;
-        let y: u8 = n % s;
+    pub fn new(n: &usize, s: &u8) -> Self {
+        let x: u8 = (*n / *s as usize) as u8;
+        let y: u8 = (*n % *s as usize) as u8;
         Self {
             pos: (x, y),
             n: *n,
@@ -243,7 +243,7 @@ impl Num {
         self.n == 0
     }
 
-    pub fn get_n(&self) -> u8 {
+    pub fn get_n(&self) -> usize {
         self.n
     }
 }
@@ -290,7 +290,7 @@ mod tests {
             let mut i = 0;
             for num in num_hrd.nums {
                 assert_eq!(num.n, i);
-                assert_eq!(num.pos, (i / size as u8, i % size as u8));
+                assert_eq!(num.pos, ((i / size as usize) as u8, (i % size as usize) as u8));
                 i += 1;
             }
         }
