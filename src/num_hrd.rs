@@ -39,7 +39,7 @@ impl Direction {
 /// ```
 /// 
 ///   
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct NumHrd {
     /// 华容道的边长
     size: u8,
@@ -75,7 +75,16 @@ impl NumHrd {
             let mut row: Vec<usize> = Vec::new();
             for j in 0..self.size {
                 let index: usize = ((i * self.size ) + j).into();
-                row.push(self.get_by_index(&index).get_n());
+                let num_opt = self.get_by_index(&index);
+                match num_opt {
+                    Some(num) => {
+                        row.push(num.get_n());
+                    },
+                    None => {
+                        // do nothing...
+                        panic!("as_2d_vec error on get_by_index index:{:?}", index);
+                    }
+                }
             }
             rows.push(row);
         }
@@ -87,8 +96,13 @@ impl NumHrd {
     /// 
     pub fn exchange(&mut self, one_index: &usize, other_index: &usize) -> Result<(), ErrorKind> {
 
-        let one = self.get_by_index(one_index);
-        let other = self.get_by_index(other_index);
+        let one_opt = self.get_by_index(one_index);
+        let other_opt = self.get_by_index(other_index);
+        if one_opt.is_none() || other_opt.is_none() {
+            return Err(ErrorKind::CannotExchangeNotNeighbouring);
+        }
+        let one = one_opt.unwrap();
+        let other = other_opt.unwrap();
         if !self.is_neighbouring(one_index, other_index) {
             return Err(ErrorKind::CannotExchangeNotNeighbouring);
         }
@@ -124,12 +138,27 @@ impl NumHrd {
         diff == 1 || diff == self.size as i64
     }
 
-    pub fn get_by_index(&self, n: &usize) -> &Num {
-        &self.nums[*n]
+    pub fn get_by_index(&self, n: &usize) -> Option<&Num> {
+        if *n > self.nums.len() {
+            return None;
+        }
+        Some(&self.nums[*n])
+    }
+
+    pub fn get_by_point(&self, p: (u8, u8)) -> Option<&Num> {
+        self.get_by_index(&self.get_index_by_point(p))
     }
 
     pub fn get_data(&self) -> &Vec<Num> {
         &self.nums
+    }
+
+    pub fn get_index_by_point(&self, p: (u8, u8)) -> usize {
+        (p.0 * self.size + p.1) as usize
+    }
+
+    pub fn size(&self) -> &u8 {
+        &self.size
     }
     /// 
     /// 得到某个数字的索引
@@ -143,8 +172,13 @@ impl NumHrd {
         let mut res = false;
         let len = self.len();
         for i in 1..len {
-            res = self.get_by_index(&(i - 1)).n as usize == i;
-            if !res {
+            if let Some(&num) = self.get_by_index(&(i - 1)) {
+                res = num.n as usize == i;
+                if !res {
+                    break
+                }
+            } else {
+                res = false;
                 break
             }
         }
@@ -233,6 +267,11 @@ impl NumHrd {
         }
         false
     }
+
+    pub fn move_num_by_point(&mut self, point: (u8, u8)) -> bool {
+        let index = self.get_index_by_point(point);
+        self.move_num(index)
+    }
 }
 
 /// 表示一个数字块
@@ -262,7 +301,6 @@ impl Num {
         self.n
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -304,11 +342,26 @@ mod tests {
         }
 
         #[test]
+        fn get_by_point_works() {
+            let mut num_hrd = NumHrd::new(&3);
+            assert_eq!(num_hrd.get_by_point((0, 0)), Some(&Num { n: 0}));
+            assert_eq!(num_hrd.get_by_point((0, 1)), Some(&Num { n: 1}));
+            assert_eq!(num_hrd.get_by_point((0, 2)), Some(&Num { n: 2}));
+            assert_eq!(num_hrd.get_by_point((1, 0)), Some(&Num { n: 3}));
+            assert_eq!(num_hrd.get_by_point((1, 1)), Some(&Num { n: 4}));
+            assert_eq!(num_hrd.get_by_point((1, 2)), Some(&Num { n: 5}));
+            assert_eq!(num_hrd.get_by_point((2, 0)), Some(&Num { n: 6}));
+            assert_eq!(num_hrd.get_by_point((2, 1)), Some(&Num { n: 7}));
+            assert_eq!(num_hrd.get_by_point((2, 2)), Some(&Num { n: 8}));
+        }
+        #[test]
         fn exchange_works() {
             let mut num_hrd = NumHrd::new(&3);
             let _ = num_hrd.exchange(&0, &1);
             println!("{:?}", num_hrd);
-            assert_eq!(num_hrd.get_by_index(&1).n, 0);
+            assert_eq!(num_hrd.get_by_index(&1), Some(&Num {
+                n: 0,
+            }));
 
         }
 
@@ -373,13 +426,13 @@ mod tests {
         fn zero_move_works() {
             let mut numhrd = NumHrd::new(&3);
             numhrd.zero_move(&Direction::Right).unwrap();
-            assert_eq!(numhrd.get_by_index(&0), &Num {
+            assert_eq!(numhrd.get_by_index(&0), Some(&Num {
                 n: 1,
-            });
+            }));
             numhrd.zero_move(&Direction::Bottom).unwrap();
-            assert_eq!(numhrd.get_by_index(&1), &Num {
+            assert_eq!(numhrd.get_by_index(&1), Some(&Num {
                 n: 4,
-            });
+            }));
         }
 
         #[test]
