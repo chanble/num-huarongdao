@@ -11,18 +11,6 @@ pub enum Direction {
     Right,
 }
 
-impl Direction {
-    fn rand(seed: u64) -> Self {
-        let mut rng = oorandom::Rand32::new(seed);
-        let n: u8 = (rng.rand_u32() % 4) as u8;
-        match n {
-            0 => Self::Top,
-            1 => Self::Bottom,
-            2 => Self::Left,
-            _ => Self::Right,
-        }
-    }
-}
 ///
 /// fifteen puzzle game lib
 /// 数字华容道
@@ -32,8 +20,6 @@ impl Direction {
 /// use num_huarongdao::num_hrd::NumHrd;
 /// // 生成一个3 x 3的游戏
 /// let mut num_hrd = NumHrd::new(&3);
-/// // 打乱游戏
-/// num_hrd.shuffle(1);
 /// 
 /// num_hrd.move_num(1usize);
 /// ```
@@ -75,14 +61,14 @@ impl NumHrd {
             let mut row: Vec<usize> = Vec::new();
             for j in 0..self.size {
                 let index: usize = ((i * self.size ) + j).into();
-                let num_opt = self.get_by_index(&index);
+                let num_opt = self.num_by_index(&index);
                 match num_opt {
                     Some(num) => {
                         row.push(num.get_n());
                     },
                     None => {
                         // do nothing...
-                        panic!("as_2d_vec error on get_by_index index:{:?}", index);
+                        panic!("as_2d_vec error on num_by_index index:{:?}", index);
                     }
                 }
             }
@@ -96,8 +82,8 @@ impl NumHrd {
     /// 
     pub fn exchange(&mut self, one_index: &usize, other_index: &usize) -> Result<(), ErrorKind> {
 
-        let one_opt = self.get_by_index(one_index);
-        let other_opt = self.get_by_index(other_index);
+        let one_opt = self.num_by_index(one_index);
+        let other_opt = self.num_by_index(other_index);
         if one_opt.is_none() || other_opt.is_none() {
             return Err(ErrorKind::CannotExchangeNotNeighbouring);
         }
@@ -138,22 +124,28 @@ impl NumHrd {
         diff == 1 || diff == self.size as i64
     }
 
-    pub fn get_by_index(&self, n: &usize) -> Option<&Num> {
+    ///
+    /// get Num ref object by index of nums
+    /// 
+    pub fn num_by_index(&self, n: &usize) -> Option<&Num> {
         if *n > self.nums.len() {
             return None;
         }
         Some(&self.nums[*n])
     }
 
-    pub fn get_by_point(&self, p: (u8, u8)) -> Option<&Num> {
-        self.get_by_index(&self.get_index_by_point(p))
+    ///
+    /// get Num ref object by point(row_index, col_index) of nums
+    /// 
+    pub fn num_by_point(&self, p: (u8, u8)) -> Option<&Num> {
+        self.num_by_index(&self.index_by_point(p))
     }
 
-    pub fn get_data(&self) -> &Vec<Num> {
+    pub fn data(&self) -> &Vec<Num> {
         &self.nums
     }
 
-    pub fn get_index_by_point(&self, p: (u8, u8)) -> usize {
+    pub fn index_by_point(&self, p: (u8, u8)) -> usize {
         (p.0 * self.size + p.1) as usize
     }
 
@@ -163,7 +155,7 @@ impl NumHrd {
     /// 
     /// 得到某个数字的索引
     /// 
-    pub fn get_index(&self, n: &usize) -> Option<usize> {
+    pub fn index_by_n(&self, n: &usize) -> Option<usize> {
         self.nums.iter().position(|x| x.n == *n)
     }
     /// 判断是否成功
@@ -172,7 +164,7 @@ impl NumHrd {
         let mut res = false;
         let len = self.len();
         for i in 1..len {
-            if let Some(&num) = self.get_by_index(&(i - 1)) {
+            if let Some(&num) = self.num_by_index(&(i - 1)) {
                 res = num.n as usize == i;
                 if !res {
                     break
@@ -185,17 +177,6 @@ impl NumHrd {
         res
     }
 
-    ///
-    /// 打乱游戏
-    /// 
-    pub fn shuffle(&mut self, seed: u64) -> Result<(), ErrorKind>{
-        for _ in 0..50 {
-            let direc: Direction = Direction::rand(seed);
-            self.zero_move(&direc)?;
-        }
-        Ok(())
-    }
-
     pub fn len(&self) -> usize {
         self.size as usize * self.size as usize
     }
@@ -204,7 +185,7 @@ impl NumHrd {
     /// 移动空格所在的位置
     /// d: direction 空格想移动的方向
     pub fn zero_move(&mut self, d: &Direction) -> Result<bool, ErrorKind> {
-        let zero_index_opt = self.get_index(&0);
+        let zero_index_opt = self.index_by_n(&0);
         match zero_index_opt {
             Some(zero_index) => {
                 if let Some(other_index) = self.get_dirction_index(&zero_index, d) {
@@ -259,7 +240,7 @@ impl NumHrd {
     /// 移动指定索引的块
     /// 
     pub fn move_num(&mut self, index: usize) -> bool {
-        if let Some(zero_index) = self.get_index(&0) {
+        if let Some(zero_index) = self.index_by_n(&0) {
             return match self.exchange(&index, &zero_index) {
                 Ok(_) => true,
                 Err(_) => false,
@@ -269,7 +250,7 @@ impl NumHrd {
     }
 
     pub fn move_num_by_point(&mut self, point: (u8, u8)) -> bool {
-        let index = self.get_index_by_point(point);
+        let index = self.index_by_point(point);
         self.move_num(index)
     }
 }
@@ -342,24 +323,24 @@ mod tests {
         }
 
         #[test]
-        fn get_by_point_works() {
-            let mut num_hrd = NumHrd::new(&3);
-            assert_eq!(num_hrd.get_by_point((0, 0)), Some(&Num { n: 0}));
-            assert_eq!(num_hrd.get_by_point((0, 1)), Some(&Num { n: 1}));
-            assert_eq!(num_hrd.get_by_point((0, 2)), Some(&Num { n: 2}));
-            assert_eq!(num_hrd.get_by_point((1, 0)), Some(&Num { n: 3}));
-            assert_eq!(num_hrd.get_by_point((1, 1)), Some(&Num { n: 4}));
-            assert_eq!(num_hrd.get_by_point((1, 2)), Some(&Num { n: 5}));
-            assert_eq!(num_hrd.get_by_point((2, 0)), Some(&Num { n: 6}));
-            assert_eq!(num_hrd.get_by_point((2, 1)), Some(&Num { n: 7}));
-            assert_eq!(num_hrd.get_by_point((2, 2)), Some(&Num { n: 8}));
+        fn num_by_point_works() {
+            let num_hrd = NumHrd::new(&3);
+            assert_eq!(num_hrd.num_by_point((0, 0)), Some(&Num { n: 0}));
+            assert_eq!(num_hrd.num_by_point((0, 1)), Some(&Num { n: 1}));
+            assert_eq!(num_hrd.num_by_point((0, 2)), Some(&Num { n: 2}));
+            assert_eq!(num_hrd.num_by_point((1, 0)), Some(&Num { n: 3}));
+            assert_eq!(num_hrd.num_by_point((1, 1)), Some(&Num { n: 4}));
+            assert_eq!(num_hrd.num_by_point((1, 2)), Some(&Num { n: 5}));
+            assert_eq!(num_hrd.num_by_point((2, 0)), Some(&Num { n: 6}));
+            assert_eq!(num_hrd.num_by_point((2, 1)), Some(&Num { n: 7}));
+            assert_eq!(num_hrd.num_by_point((2, 2)), Some(&Num { n: 8}));
         }
         #[test]
         fn exchange_works() {
             let mut num_hrd = NumHrd::new(&3);
             let _ = num_hrd.exchange(&0, &1);
             println!("{:?}", num_hrd);
-            assert_eq!(num_hrd.get_by_index(&1), Some(&Num {
+            assert_eq!(num_hrd.num_by_index(&1), Some(&Num {
                 n: 0,
             }));
 
@@ -426,21 +407,13 @@ mod tests {
         fn zero_move_works() {
             let mut numhrd = NumHrd::new(&3);
             numhrd.zero_move(&Direction::Right).unwrap();
-            assert_eq!(numhrd.get_by_index(&0), Some(&Num {
+            assert_eq!(numhrd.num_by_index(&0), Some(&Num {
                 n: 1,
             }));
             numhrd.zero_move(&Direction::Bottom).unwrap();
-            assert_eq!(numhrd.get_by_index(&1), Some(&Num {
+            assert_eq!(numhrd.num_by_index(&1), Some(&Num {
                 n: 4,
             }));
-        }
-
-        #[test]
-        fn shuffle_works() {
-            let mut numhrd = NumHrd::new(&3);
-            numhrd.shuffle(1).unwrap();
-            println!("{:#?}", numhrd);
-            assert_eq!(1, 1);
         }
     }
 }
