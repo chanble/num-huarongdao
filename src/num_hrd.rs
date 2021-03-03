@@ -42,10 +42,11 @@ impl NumHrd {
     pub fn new(s: &u8) -> Self {
         let mut nums:Vec<Num> = Vec::new();
         let nums_len: usize = (s * s).into();
-        for i in 0..nums_len {
+        for i in 1..nums_len {
             let num = Num::new(&i);
             nums.push(num);
         }
+        nums.push(Num::new(&0));
         Self {
             size: *s,
             nums,
@@ -161,20 +162,7 @@ impl NumHrd {
     /// 判断是否成功
     /// 
     pub fn is_win(&self) -> bool {
-        let mut res = false;
-        let len = self.len();
-        for i in 1..len {
-            if let Some(&num) = self.num_by_index(&(i - 1)) {
-                res = num.n as usize == i;
-                if !res {
-                    break
-                }
-            } else {
-                res = false;
-                break
-            }
-        }
-        res
+        self.nums == Self::new(&self.size).nums
     }
 
     pub fn len(&self) -> usize {
