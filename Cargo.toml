@@ -1,6 +1,6 @@
 [package]
 name = "num-huarongdao"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["chen <chanble_cn@163.com>"]
 edition = "2018"
 description = "fifteen puzzle lib"

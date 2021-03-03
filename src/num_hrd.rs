@@ -303,32 +303,27 @@ mod tests {
             let num_hrd = NumHrd::new(&size);
             assert_eq!(num_hrd.size, size);
             assert_eq!(num_hrd.nums.len(), (size * size) as usize);
-            let mut i = 0;
-            for num in num_hrd.nums {
-                assert_eq!(num.n, i);
-                i += 1;
-            }
         }
 
         #[test]
         fn num_by_point_works() {
             let num_hrd = NumHrd::new(&3);
-            assert_eq!(num_hrd.num_by_point((0, 0)), Some(&Num { n: 0}));
-            assert_eq!(num_hrd.num_by_point((0, 1)), Some(&Num { n: 1}));
-            assert_eq!(num_hrd.num_by_point((0, 2)), Some(&Num { n: 2}));
-            assert_eq!(num_hrd.num_by_point((1, 0)), Some(&Num { n: 3}));
-            assert_eq!(num_hrd.num_by_point((1, 1)), Some(&Num { n: 4}));
-            assert_eq!(num_hrd.num_by_point((1, 2)), Some(&Num { n: 5}));
-            assert_eq!(num_hrd.num_by_point((2, 0)), Some(&Num { n: 6}));
-            assert_eq!(num_hrd.num_by_point((2, 1)), Some(&Num { n: 7}));
-            assert_eq!(num_hrd.num_by_point((2, 2)), Some(&Num { n: 8}));
+            assert_eq!(num_hrd.num_by_point((0, 0)), Some(&Num { n: 1}));
+            assert_eq!(num_hrd.num_by_point((0, 1)), Some(&Num { n: 2}));
+            assert_eq!(num_hrd.num_by_point((0, 2)), Some(&Num { n: 3}));
+            assert_eq!(num_hrd.num_by_point((1, 0)), Some(&Num { n: 4}));
+            assert_eq!(num_hrd.num_by_point((1, 1)), Some(&Num { n: 5}));
+            assert_eq!(num_hrd.num_by_point((1, 2)), Some(&Num { n: 6}));
+            assert_eq!(num_hrd.num_by_point((2, 0)), Some(&Num { n: 7}));
+            assert_eq!(num_hrd.num_by_point((2, 1)), Some(&Num { n: 8}));
+            assert_eq!(num_hrd.num_by_point((2, 2)), Some(&Num { n: 0}));
         }
         #[test]
         fn exchange_works() {
             let mut num_hrd = NumHrd::new(&3);
-            let _ = num_hrd.exchange(&0, &1);
+            let _ = num_hrd.exchange(&0, &8);
             println!("{:?}", num_hrd);
-            assert_eq!(num_hrd.num_by_index(&1), Some(&Num {
+            assert_eq!(num_hrd.num_by_index(&8), Some(&Num {
                 n: 0,
             }));
 
@@ -346,7 +341,7 @@ mod tests {
         #[test]
         fn is_win_works() {
             let mut num_hrd = NumHrd::new(&3);
-            assert_eq!(num_hrd.is_win(), false);
+            assert_eq!(num_hrd.is_win(), true);
             num_hrd.nums[0] = Num {
                 n: 1,
             };
@@ -371,6 +366,9 @@ mod tests {
             num_hrd.nums[7] = Num {
                 n: 8,
             };
+            num_hrd.nums[8] = Num {
+                n: 0,
+            };
             assert_eq!(num_hrd.is_win(), true);
         }
 
@@ -394,13 +392,13 @@ mod tests {
         #[test]
         fn zero_move_works() {
             let mut numhrd = NumHrd::new(&3);
-            numhrd.zero_move(&Direction::Right).unwrap();
-            assert_eq!(numhrd.num_by_index(&0), Some(&Num {
-                n: 1,
+            numhrd.zero_move(&Direction::Left).unwrap();
+            assert_eq!(numhrd.num_by_index(&8), Some(&Num {
+                n: 8,
             }));
-            numhrd.zero_move(&Direction::Bottom).unwrap();
-            assert_eq!(numhrd.num_by_index(&1), Some(&Num {
-                n: 4,
+            numhrd.zero_move(&Direction::Top).unwrap();
+            assert_eq!(numhrd.num_by_index(&7), Some(&Num {
+                n: 5,
             }));
         }
     }
